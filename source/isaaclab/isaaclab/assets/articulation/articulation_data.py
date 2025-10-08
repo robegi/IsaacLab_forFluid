@@ -61,7 +61,7 @@ class ArticulationData:
         self.FORWARD_VEC_B = torch.tensor((1.0, 0.0, 0.0), device=self.device).repeat(self._root_physx_view.count, 1)
 
         # Initialize history for finite differencing
-        self._previous_joint_vel = self._root_physx_view.get_dof_velocities().clone()
+        self._previous_joint_vel = self._root_physx_view.get_dof_velocities().clone().to(self.device)
 
         # Initialize the lazy buffers.
         # -- link frame w.r.t. world frame
@@ -451,7 +451,7 @@ class ArticulationData:
         """
         if self._root_link_pose_w.timestamp < self._sim_timestamp:
             # read data from simulation
-            pose = self._root_physx_view.get_root_transforms().clone()
+            pose = self._root_physx_view.get_root_transforms().clone().to(self.device)
             pose[:, 3:7] = math_utils.convert_quat(pose[:, 3:7], to="wxyz")
             # set the buffer data and timestamp
             self._root_link_pose_w.data = pose
@@ -505,7 +505,7 @@ class ArticulationData:
         relative to the world.
         """
         if self._root_com_vel_w.timestamp < self._sim_timestamp:
-            self._root_com_vel_w.data = self._root_physx_view.get_root_velocities()
+            self._root_com_vel_w.data = self._root_physx_view.get_root_velocities().to(self.device)
             self._root_com_vel_w.timestamp = self._sim_timestamp
 
         return self._root_com_vel_w.data
@@ -727,7 +727,7 @@ class ArticulationData:
         """Joint positions of all joints. Shape is (num_instances, num_joints)."""
         if self._joint_pos.timestamp < self._sim_timestamp:
             # read data from simulation and set the buffer data and timestamp
-            self._joint_pos.data = self._root_physx_view.get_dof_positions()
+            self._joint_pos.data = self._root_physx_view.get_dof_positions().to(self.device)
             self._joint_pos.timestamp = self._sim_timestamp
         return self._joint_pos.data
 
@@ -736,7 +736,7 @@ class ArticulationData:
         """Joint velocities of all joints. Shape is (num_instances, num_joints)."""
         if self._joint_vel.timestamp < self._sim_timestamp:
             # read data from simulation and set the buffer data and timestamp
-            self._joint_vel.data = self._root_physx_view.get_dof_velocities()
+            self._joint_vel.data = self._root_physx_view.get_dof_velocities().to(self.device)
             self._joint_vel.timestamp = self._sim_timestamp
         return self._joint_vel.data
 

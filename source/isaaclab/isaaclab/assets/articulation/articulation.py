@@ -28,6 +28,9 @@ from isaaclab.utils.types import ArticulationActions
 from ..asset_base import AssetBase
 from .articulation_data import ArticulationData
 
+# Custom imports
+import carb
+
 if TYPE_CHECKING:
     from .articulation_cfg import ArticulationCfg
 
@@ -213,11 +216,11 @@ class Articulation(AssetBase):
         # apply actuator models
         self._apply_actuator_model()
         # write actions into simulation
-        self.root_physx_view.set_dof_actuation_forces(self._joint_effort_target_sim, self._ALL_INDICES)
+        self.root_physx_view.set_dof_actuation_forces(self._joint_effort_target_sim.to('cpu'), self._ALL_INDICES.to('cpu'))
         # position and velocity targets only for implicit actuators
         if self._has_implicit_actuators:
-            self.root_physx_view.set_dof_position_targets(self._joint_pos_target_sim, self._ALL_INDICES)
-            self.root_physx_view.set_dof_velocity_targets(self._joint_vel_target_sim, self._ALL_INDICES)
+            self.root_physx_view.set_dof_position_targets(self._joint_pos_target_sim.to('cpu'), self._ALL_INDICES.to('cpu'))
+            self.root_physx_view.set_dof_velocity_targets(self._joint_vel_target_sim.to('cpu'), self._ALL_INDICES.to('cpu'))
 
     def update(self, dt: float):
         self._data.update(dt)
@@ -379,7 +382,7 @@ class Articulation(AssetBase):
             physx_env_ids = self._ALL_INDICES
 
         # note: we need to do this here since tensors are not set into simulation until step.
-        # set into internal buffers
+        # set into internal buffers 
         self._data.root_link_pose_w[env_ids] = root_pose.clone()
         # update these buffers only if the user is using them. Otherwise this adds to overhead.
         if self._data._root_link_state_w.data is not None:
@@ -399,7 +402,8 @@ class Articulation(AssetBase):
         self._data._body_com_state_w.timestamp = -1.0
 
         # set into simulation
-        self.root_physx_view.set_root_transforms(root_poses_xyzw, indices=physx_env_ids)
+        self.root_physx_view.set_root_transforms(root_poses_xyzw.to('cpu'), indices=physx_env_ids.to('cpu'))
+        
 
     def write_root_com_pose_to_sim(self, root_pose: torch.Tensor, env_ids: Sequence[int] | None = None):
         """Set the root center of mass pose over selected environment indices into the simulation.
@@ -478,7 +482,7 @@ class Articulation(AssetBase):
         self._data.body_acc_w[env_ids] = 0.0
 
         # set into simulation
-        self.root_physx_view.set_root_velocities(self._data.root_com_vel_w, indices=physx_env_ids)
+        self.root_physx_view.set_root_velocities(self._data.root_com_vel_w.to('cpu'), indices=physx_env_ids.to('cpu'))
 
     def write_root_link_velocity_to_sim(self, root_velocity: torch.Tensor, env_ids: Sequence[int] | None = None):
         """Set the root link velocity over selected environment indices into the simulation.
@@ -569,7 +573,7 @@ class Articulation(AssetBase):
         self._data._body_link_state_w.timestamp = -1.0
         self._data._body_com_state_w.timestamp = -1.0
         # set into simulation
-        self.root_physx_view.set_dof_positions(self._data.joint_pos, indices=physx_env_ids)
+        self.root_physx_view.set_dof_positions(self._data.joint_pos.to('cpu'), indices=physx_env_ids.to('cpu'))
 
     def write_joint_velocity_to_sim(
         self,
@@ -599,7 +603,7 @@ class Articulation(AssetBase):
         self._data._previous_joint_vel[env_ids, joint_ids] = velocity
         self._data.joint_acc[env_ids, joint_ids] = 0.0
         # set into simulation
-        self.root_physx_view.set_dof_velocities(self._data.joint_vel, indices=physx_env_ids)
+        self.root_physx_view.set_dof_velocities(self._data.joint_vel.to('cpu'), indices=physx_env_ids.to('cpu'))
 
     """
     Operations - Simulation Parameters Writers.
