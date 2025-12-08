@@ -8,12 +8,12 @@
 
 from __future__ import annotations
 
+import logging
 import torch
 from collections.abc import Sequence
 from prettytable import PrettyTable
 from typing import TYPE_CHECKING
 
-import omni.log
 import omni.physics.tensors.impl.api as physx
 from isaacsim.core.simulation_manager import SimulationManager
 from isaacsim.core.version import get_version
@@ -33,6 +33,9 @@ import carb
 
 if TYPE_CHECKING:
     from .articulation_cfg import ArticulationCfg
+
+# import logger
+logger = logging.getLogger(__name__)
 
 
 class Articulation(AssetBase):
@@ -710,10 +713,10 @@ class Articulation(AssetBase):
             )
             if warn_limit_violation:
                 # warn level will show in console
-                omni.log.warn(violation_message)
+                logger.warning(violation_message)
             else:
                 # info level is only written to log file
-                omni.log.info(violation_message)
+                logger.info(violation_message)
         # set into simulation
         self.root_physx_view.set_dof_limits(self._data.joint_pos_limits.cpu(), indices=physx_env_ids.cpu())
 
@@ -911,7 +914,7 @@ class Articulation(AssetBase):
         env_ids: Sequence[int] | None = None,
     ):
         if int(get_version()[2]) < 5:
-            omni.log.warn("Setting joint dynamic friction coefficients are not supported in Isaac Sim < 5.0")
+            logger.warning("Setting joint dynamic friction coefficients are not supported in Isaac Sim < 5.0")
             return
         # resolve indices
         physx_env_ids = env_ids
@@ -937,7 +940,7 @@ class Articulation(AssetBase):
         env_ids: Sequence[int] | None = None,
     ):
         if int(get_version()[2]) < 5:
-            omni.log.warn("Setting joint viscous friction coefficients are not supported in Isaac Sim < 5.0")
+            logger.warning("Setting joint viscous friction coefficients are not supported in Isaac Sim < 5.0")
             return
         # resolve indices
         physx_env_ids = env_ids
@@ -1041,7 +1044,7 @@ class Articulation(AssetBase):
         self._external_torque_b.flatten(0, 1)[indices] = torques.flatten(0, 1)
 
         if is_global != self._use_global_wrench_frame:
-            omni.log.warn(
+            logger.warning(
                 f"The external wrench frame has been changed from {self._use_global_wrench_frame} to {is_global}. This"
                 " may lead to unexpected behavior."
             )
@@ -1336,7 +1339,7 @@ class Articulation(AssetBase):
             env_ids: The environment indices to set the stiffness for. Defaults to None (all environments).
         """
         if int(get_version()[2]) < 5:
-            omni.log.warn(
+            logger.warning(
                 "Spatial tendons are not supported in Isaac Sim < 5.0. Please update to Isaac Sim 5.0 or later."
             )
             return
@@ -1367,7 +1370,7 @@ class Articulation(AssetBase):
             env_ids: The environment indices to set the damping for. Defaults to None (all environments).
         """
         if int(get_version()[2]) < 5:
-            omni.log.warn(
+            logger.warning(
                 "Spatial tendons are not supported in Isaac Sim < 5.0. Please update to Isaac Sim 5.0 or later."
             )
             return
@@ -1398,7 +1401,7 @@ class Articulation(AssetBase):
             env_ids: The environment indices to set the limit stiffness for. Defaults to None (all environments).
         """
         if int(get_version()[2]) < 5:
-            omni.log.warn(
+            logger.warning(
                 "Spatial tendons are not supported in Isaac Sim < 5.0. Please update to Isaac Sim 5.0 or later."
             )
             return
@@ -1429,7 +1432,7 @@ class Articulation(AssetBase):
             env_ids: The environment indices to set the offset for. Defaults to None (all environments).
         """
         if int(get_version()[2]) < 5:
-            omni.log.warn(
+            logger.warning(
                 "Spatial tendons are not supported in Isaac Sim < 5.0. Please update to Isaac Sim 5.0 or later."
             )
             return
@@ -1522,7 +1525,7 @@ class Articulation(AssetBase):
             raise RuntimeError(f"Failed to create articulation at: {root_prim_path_expr}. Please check PhysX logs.")
 
         if int(get_version()[2]) < 5:
-            omni.log.warn(
+            logger.warning(
                 "Spatial tendons are not supported in Isaac Sim < 5.0: patching spatial-tendon getter"
                 " and setter to use dummy value"
             )
@@ -1531,19 +1534,19 @@ class Articulation(AssetBase):
             self._root_physx_view.get_spatial_tendon_dampings = lambda: torch.empty(0, device=self.device)
             self._root_physx_view.get_spatial_tendon_limit_stiffnesses = lambda: torch.empty(0, device=self.device)
             self._root_physx_view.get_spatial_tendon_offsets = lambda: torch.empty(0, device=self.device)
-            self._root_physx_view.set_spatial_tendon_properties = lambda *args, **kwargs: omni.log.warn(
+            self._root_physx_view.set_spatial_tendon_properties = lambda *args, **kwargs: logger.warning(
                 "Spatial tendons are not supported in Isaac Sim < 5.0: Calling"
                 " set_spatial_tendon_properties has no effect"
             )
 
         # log information about the articulation
-        omni.log.info(f"Articulation initialized at: {self.cfg.prim_path} with root '{root_prim_path_expr}'.")
-        omni.log.info(f"Is fixed root: {self.is_fixed_base}")
-        omni.log.info(f"Number of bodies: {self.num_bodies}")
-        omni.log.info(f"Body names: {self.body_names}")
-        omni.log.info(f"Number of joints: {self.num_joints}")
-        omni.log.info(f"Joint names: {self.joint_names}")
-        omni.log.info(f"Number of fixed tendons: {self.num_fixed_tendons}")
+        logger.info(f"Articulation initialized at: {self.cfg.prim_path} with root '{root_prim_path_expr}'.")
+        logger.info(f"Is fixed root: {self.is_fixed_base}")
+        logger.info(f"Number of bodies: {self.num_bodies}")
+        logger.info(f"Body names: {self.body_names}")
+        logger.info(f"Number of joints: {self.num_joints}")
+        logger.info(f"Joint names: {self.joint_names}")
+        logger.info(f"Number of fixed tendons: {self.num_fixed_tendons}")
 
         # container for data access
         self._data = ArticulationData(self.root_physx_view, self.device)
@@ -1717,12 +1720,12 @@ class Articulation(AssetBase):
                 friction=self._data.default_joint_friction_coeff[:, joint_ids],
                 dynamic_friction=self._data.default_joint_dynamic_friction_coeff[:, joint_ids],
                 viscous_friction=self._data.default_joint_viscous_friction_coeff[:, joint_ids],
-                effort_limit=self._data.joint_effort_limits[:, joint_ids],
+                effort_limit=self._data.joint_effort_limits[:, joint_ids].clone(),
                 velocity_limit=self._data.joint_vel_limits[:, joint_ids],
             )
             # log information on actuator groups
             model_type = "implicit" if actuator.is_implicit_model else "explicit"
-            omni.log.info(
+            logger.info(
                 f"Actuator collection: {actuator_name} with model '{actuator_cfg.class_type.__name__}'"
                 f" (type: {model_type}) and joint names: {joint_names} [{joint_ids}]."
             )
@@ -1766,7 +1769,7 @@ class Articulation(AssetBase):
         # perform some sanity checks to ensure actuators are prepared correctly
         total_act_joints = sum(actuator.num_joints for actuator in self.actuators.values())
         if total_act_joints != (self.num_joints - self.num_fixed_tendons):
-            omni.log.warn(
+            logger.warning(
                 "Not all actuators are configured! Total number of actuated joints not equal to number of"
                 f" joints available: {total_act_joints} != {self.num_joints - self.num_fixed_tendons}."
             )
@@ -1782,7 +1785,7 @@ class Articulation(AssetBase):
                         fmt = [f"{v:.2e}" if isinstance(v, float) else str(v) for v in resolution_detail]
                         t.add_row([actuator_group_str, property_str, *fmt])
                         group_count += 1
-            omni.log.warn(f"\nActuatorCfg-USD Value Discrepancy Resolution (matching values are skipped): \n{t}")
+            logger.warning(f"\nActuatorCfg-USD Value Discrepancy Resolution (matching values are skipped): \n{t}")
 
     def _process_tendons(self):
         """Process fixed and spatial tendons."""
@@ -2006,7 +2009,7 @@ class Articulation(AssetBase):
                     effort_limits[index],
                 ])
         # convert table to string
-        omni.log.info(f"Simulation parameters for joints in {self.cfg.prim_path}:\n" + joint_table.get_string())
+        logger.info(f"Simulation parameters for joints in {self.cfg.prim_path}:\n" + joint_table.get_string())
 
         # read out all fixed tendon parameters from simulation
         if self.num_fixed_tendons > 0:
@@ -2044,7 +2047,7 @@ class Articulation(AssetBase):
                     ft_offsets[index],
                 ])
             # convert table to string
-            omni.log.info(
+            logger.info(
                 f"Simulation parameters for fixed tendons in {self.cfg.prim_path}:\n" + tendon_table.get_string()
             )
 
@@ -2076,7 +2079,7 @@ class Articulation(AssetBase):
                     st_offsets[index],
                 ])
             # convert table to string
-            omni.log.info(
+            logger.info(
                 f"Simulation parameters for spatial tendons in {self.cfg.prim_path}:\n" + tendon_table.get_string()
             )
 
@@ -2095,7 +2098,7 @@ class Articulation(AssetBase):
         .. deprecated:: 2.1.0
             Please use :meth:`write_joint_friction_coefficient_to_sim` instead.
         """
-        omni.log.warn(
+        logger.warning(
             "The function 'write_joint_friction_to_sim' will be deprecated in a future release. Please"
             " use 'write_joint_friction_coefficient_to_sim' instead."
         )
@@ -2113,7 +2116,7 @@ class Articulation(AssetBase):
         .. deprecated:: 2.1.0
             Please use :meth:`write_joint_position_limit_to_sim` instead.
         """
-        omni.log.warn(
+        logger.warning(
             "The function 'write_joint_limits_to_sim' will be deprecated in a future release. Please"
             " use 'write_joint_position_limit_to_sim' instead."
         )
@@ -2132,7 +2135,7 @@ class Articulation(AssetBase):
         .. deprecated:: 2.1.0
             Please use :meth:`set_fixed_tendon_position_limit` instead.
         """
-        omni.log.warn(
+        logger.warning(
             "The function 'set_fixed_tendon_limit' will be deprecated in a future release. Please"
             " use 'set_fixed_tendon_position_limit' instead."
         )
