@@ -132,7 +132,7 @@ class RigidObjectData:
         """
         if self._root_link_pose_w.timestamp < self._sim_timestamp:
             # read data from simulation
-            pose = self._root_physx_view.get_transforms().clone()
+            pose = self._root_physx_view.get_transforms().clone().to("cpu")
             pose[:, 3:7] = math_utils.convert_quat(pose[:, 3:7], to="wxyz")
             # set the buffer data and timestamp
             self._root_link_pose_w.data = pose
@@ -149,7 +149,7 @@ class RigidObjectData:
         """
         if self._root_link_vel_w.timestamp < self._sim_timestamp:
             # read the CoM velocity
-            vel = self.root_com_vel_w.clone()
+            vel = self.root_com_vel_w.clone().to('cpu')
             # adjust linear velocity to link from center of mass
             vel[:, :3] += torch.linalg.cross(
                 vel[:, 3:], math_utils.quat_apply(self.root_link_quat_w, -self.body_com_pos_b[:, 0]), dim=-1
@@ -186,7 +186,7 @@ class RigidObjectData:
         relative to the world.
         """
         if self._root_com_vel_w.timestamp < self._sim_timestamp:
-            self._root_com_vel_w.data = self._root_physx_view.get_velocities()
+            self._root_com_vel_w.data = self._root_physx_view.get_velocities().to('cpu')
             self._root_com_vel_w.timestamp = self._sim_timestamp
 
         return self._root_com_vel_w.data
@@ -311,7 +311,7 @@ class RigidObjectData:
         This quantity is the acceleration of the rigid bodies' center of mass frame relative to the world.
         """
         if self._body_com_acc_w.timestamp < self._sim_timestamp:
-            self._body_com_acc_w.data = self._root_physx_view.get_accelerations().unsqueeze(1)
+            self._body_com_acc_w.data = self._root_physx_view.get_accelerations().unsqueeze(1).to('cpu')
             self._body_com_acc_w.timestamp = self._sim_timestamp
 
         return self._body_com_acc_w.data

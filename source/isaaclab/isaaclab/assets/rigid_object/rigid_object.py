@@ -224,7 +224,7 @@ class RigidObject(AssetBase):
 
         # note: we need to do this here since tensors are not set into simulation until step.
         # set into internal buffers
-        self._data.root_link_pose_w[env_ids] = root_pose.clone()
+        self._data.root_link_pose_w[env_ids] = root_pose.clone().to('cpu')
         # update these buffers only if the user is using them. Otherwise this adds to overhead.
         if self._data._root_link_state_w.data is not None:
             self._data.root_link_state_w[env_ids, :7] = self._data.root_link_pose_w[env_ids]
@@ -243,7 +243,7 @@ class RigidObject(AssetBase):
         root_poses_xyzw = self._data.root_link_pose_w.clone()
         root_poses_xyzw[:, 3:] = math_utils.convert_quat(root_poses_xyzw[:, 3:], to="xyzw")
         # set into simulation
-        self.root_physx_view.set_transforms(root_poses_xyzw, indices=physx_env_ids)
+        self.root_physx_view.set_transforms(root_poses_xyzw.to('cpu'), indices=physx_env_ids.to('cpu'))
 
     def write_root_com_pose_to_sim(self, root_pose: torch.Tensor, env_ids: Sequence[int] | None = None):
         """Set the root center of mass pose over selected environment indices into the simulation.
@@ -262,7 +262,7 @@ class RigidObject(AssetBase):
             local_env_ids = env_ids
 
         # set into internal buffers
-        self._data.root_com_pose_w[local_env_ids] = root_pose.clone()
+        self._data.root_com_pose_w[local_env_ids] = root_pose.clone().to('cpu')
         # update these buffers only if the user is using them. Otherwise this adds to overhead.
         if self._data._root_com_state_w.data is not None:
             self._data.root_com_state_w[local_env_ids, :7] = self._data.root_com_pose_w[local_env_ids]
@@ -312,7 +312,7 @@ class RigidObject(AssetBase):
 
         # note: we need to do this here since tensors are not set into simulation until step.
         # set into internal buffers
-        self._data.root_com_vel_w[env_ids] = root_velocity.clone()
+        self._data.root_com_vel_w[env_ids] = root_velocity.clone().to('cpu')
         # update these buffers only if the user is using them. Otherwise this adds to overhead.
         if self._data._root_com_state_w.data is not None:
             self._data.root_com_state_w[env_ids, 7:] = self._data.root_com_vel_w[env_ids]
@@ -323,7 +323,7 @@ class RigidObject(AssetBase):
         # make the acceleration zero to prevent reporting old values
         self._data.body_com_acc_w[env_ids] = 0.0
         # set into simulation
-        self.root_physx_view.set_velocities(self._data.root_com_vel_w, indices=physx_env_ids)
+        self.root_physx_view.set_velocities(self._data.root_com_vel_w.to('cpu'), indices=physx_env_ids.to('cpu'))
 
     def write_root_link_velocity_to_sim(self, root_velocity: torch.Tensor, env_ids: Sequence[int] | None = None):
         """Set the root link velocity over selected environment indices into the simulation.

@@ -572,7 +572,7 @@ class ArticulationData:
             self._body_link_pose_w.data = poses
             self._body_link_pose_w.timestamp = self._sim_timestamp
 
-        return self._body_link_pose_w.data
+        return self._body_link_pose_w.data.to(self.device)
 
     @property
     def body_link_vel_w(self) -> torch.Tensor:
@@ -593,7 +593,7 @@ class ArticulationData:
             self._body_link_vel_w.data = velocities
             self._body_link_vel_w.timestamp = self._sim_timestamp
 
-        return self._body_link_vel_w.data
+        return self._body_link_vel_w.data.to(self.device)
 
     @property
     def body_com_pose_w(self) -> torch.Tensor:
@@ -612,7 +612,7 @@ class ArticulationData:
             self._body_com_pose_w.data = torch.cat((pos, quat), dim=-1)
             self._body_com_pose_w.timestamp = self._sim_timestamp
 
-        return self._body_com_pose_w.data
+        return self._body_com_pose_w.data.to(self.device)
 
     @property
     def body_com_vel_w(self) -> torch.Tensor:
@@ -626,7 +626,7 @@ class ArticulationData:
             self._body_com_vel_w.data = self._root_physx_view.get_link_velocities()
             self._body_com_vel_w.timestamp = self._sim_timestamp
 
-        return self._body_com_vel_w.data
+        return self._body_com_vel_w.data.to(self.device)
 
     @property
     def body_state_w(self):
@@ -640,7 +640,7 @@ class ArticulationData:
             self._body_state_w.data = torch.cat((self.body_link_pose_w, self.body_com_vel_w), dim=-1)
             self._body_state_w.timestamp = self._sim_timestamp
 
-        return self._body_state_w.data
+        return self._body_state_w.data.to(self.device)
 
     @property
     def body_link_state_w(self):
@@ -653,7 +653,7 @@ class ArticulationData:
             self._body_link_state_w.data = torch.cat((self.body_link_pose_w, self.body_link_vel_w), dim=-1)
             self._body_link_state_w.timestamp = self._sim_timestamp
 
-        return self._body_link_state_w.data
+        return self._body_link_state_w.data.to(self.device)
 
     @property
     def body_com_state_w(self):
@@ -668,7 +668,7 @@ class ArticulationData:
             self._body_com_state_w.data = torch.cat((self.body_com_pose_w, self.body_com_vel_w), dim=-1)
             self._body_com_state_w.timestamp = self._sim_timestamp
 
-        return self._body_com_state_w.data
+        return self._body_com_state_w.data.to(self.device)
 
     @property
     def body_com_acc_w(self):
@@ -682,7 +682,7 @@ class ArticulationData:
             self._body_com_acc_w.data = self._root_physx_view.get_link_accelerations()
             self._body_com_acc_w.timestamp = self._sim_timestamp
 
-        return self._body_com_acc_w.data
+        return self._body_com_acc_w.data.to(self.device)
 
     @property
     def body_com_pose_b(self) -> torch.Tensor:
@@ -700,7 +700,7 @@ class ArticulationData:
             self._body_com_pose_b.data = pose
             self._body_com_pose_b.timestamp = self._sim_timestamp
 
-        return self._body_com_pose_b.data
+        return self._body_com_pose_b.data.to(self.device)
 
     @property
     def body_incoming_joint_wrench_b(self) -> torch.Tensor:
@@ -716,7 +716,7 @@ class ArticulationData:
         if self._body_incoming_joint_wrench_b.timestamp < self._sim_timestamp:
             self._body_incoming_joint_wrench_b.data = self._root_physx_view.get_link_incoming_joint_force()
             self._body_incoming_joint_wrench_b.time_stamp = self._sim_timestamp
-        return self._body_incoming_joint_wrench_b.data
+        return self._body_incoming_joint_wrench_b.data.to(self.device)
 
     ##
     # Joint state properties.
@@ -729,7 +729,7 @@ class ArticulationData:
             # read data from simulation and set the buffer data and timestamp
             self._joint_pos.data = self._root_physx_view.get_dof_positions().to(self.device)
             self._joint_pos.timestamp = self._sim_timestamp
-        return self._joint_pos.data
+        return self._joint_pos.data.to(self.device)
 
     @property
     def joint_vel(self):

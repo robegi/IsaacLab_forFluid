@@ -383,7 +383,7 @@ class Articulation(AssetBase):
 
         # note: we need to do this here since tensors are not set into simulation until step.
         # set into internal buffers 
-        self._data.root_link_pose_w[env_ids] = root_pose.clone()
+        self._data.root_link_pose_w[env_ids] = root_pose.clone().to(self.device)
         # update these buffers only if the user is using them. Otherwise this adds to overhead.
         if self._data._root_link_state_w.data is not None:
             self._data.root_link_state_w[env_ids, :7] = self._data.root_link_pose_w[env_ids]
@@ -391,7 +391,7 @@ class Articulation(AssetBase):
             self._data.root_state_w[env_ids, :7] = self._data.root_link_pose_w[env_ids]
 
         # convert root quaternion from wxyz to xyzw
-        root_poses_xyzw = self._data.root_link_pose_w.clone()
+        root_poses_xyzw = self._data.root_link_pose_w.clone().to(self.device)
         root_poses_xyzw[:, 3:] = math_utils.convert_quat(root_poses_xyzw[:, 3:], to="xyzw")
 
         # Need to invalidate the buffer to trigger the update with the new state.
@@ -422,7 +422,7 @@ class Articulation(AssetBase):
             local_env_ids = env_ids
 
         # set into internal buffers
-        self._data.root_com_pose_w[local_env_ids] = root_pose.clone()
+        self._data.root_com_pose_w[local_env_ids] = root_pose.clone().to(self.device)
         # update these buffers only if the user is using them. Otherwise this adds to overhead.
         if self._data._root_com_state_w.data is not None:
             self._data.root_com_state_w[local_env_ids, :7] = self._data.root_com_pose_w[local_env_ids]
@@ -440,7 +440,7 @@ class Articulation(AssetBase):
         root_link_pose = torch.cat((root_link_pos, root_link_quat), dim=-1)
 
         # write transformed pose in link frame to sim
-        self.write_root_link_pose_to_sim(root_pose=root_link_pose, env_ids=env_ids)
+        self.write_root_link_pose_to_sim(root_pose=root_link_pose.to('cpu'), env_ids=env_ids.to('cpu'))
 
     def write_root_velocity_to_sim(self, root_velocity: torch.Tensor, env_ids: Sequence[int] | None = None):
         """Set the root center of mass velocity over selected environment indices into the simulation.
