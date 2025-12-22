@@ -227,7 +227,7 @@ class RigidObject(AssetBase):
 
         # note: we need to do this here since tensors are not set into simulation until step.
         # set into internal buffers
-        self._data.root_link_pose_w[env_ids] = root_pose.clone().to('cpu')
+        self._data.root_link_pose_w[env_ids] = root_pose.clone()
         # update these buffers only if the user is using them. Otherwise this adds to overhead.
         if self._data._root_link_state_w.data is not None:
             self._data.root_link_state_w[env_ids, :7] = self._data.root_link_pose_w[env_ids]
@@ -315,7 +315,7 @@ class RigidObject(AssetBase):
 
         # note: we need to do this here since tensors are not set into simulation until step.
         # set into internal buffers
-        self._data.root_com_vel_w[env_ids] = root_velocity.clone().to('cpu')
+        self._data.root_com_vel_w[env_ids] = root_velocity.clone()
         # update these buffers only if the user is using them. Otherwise this adds to overhead.
         if self._data._root_com_state_w.data is not None:
             self._data.root_com_state_w[env_ids, 7:] = self._data.root_com_vel_w[env_ids]
