@@ -44,7 +44,7 @@ CARTPOLE_CFG = ArticulationCfg(
             damping=10.0,
         ),
         "pole_actuator": ImplicitActuatorCfg(
-            joint_names_expr=["cart_to_pole"], effort_limit_sim=400.0, stiffness=1000.0, damping=10.0
+            joint_names_expr=["cart_to_pole"], effort_limit_sim=400.0, stiffness=0.0, damping=0.0
         ),
     },
 )
